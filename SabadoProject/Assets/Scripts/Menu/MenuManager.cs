@@ -1,5 +1,5 @@
-﻿using UnityEngine;
-using UnityEngine.UI;
+﻿using TMPro;
+using UnityEngine;
 
 namespace Sabado
 {
@@ -9,7 +9,7 @@ namespace Sabado
     public class MenuManager : MonoBehaviour
     {
         [Header("Text References")]
-        [SerializeField] private Text titleText = null;
+        [SerializeField] private TextMeshProUGUI titleText = null;
 
         [Header("Fade Settings")]
         [SerializeField] private Color fadeColor = Color.white;

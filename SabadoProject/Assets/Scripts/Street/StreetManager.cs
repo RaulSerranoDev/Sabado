@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using WanzyeeStudio;
 using RaulSerranoDev;
 
 namespace Sabado
@@ -10,7 +9,7 @@ namespace Sabado
     /// </summary>
     public class StreetManager : MonoBehaviour
     {
-        public static StreetManager Instance { get { return Singleton<StreetManager>.instance; } }
+        public static StreetManager Instance { get; private set; }
 
         [Header("Game Settings")]
         [SerializeField] private int initialTime = 0;     //Hora inicial en minutos
@@ -38,6 +37,14 @@ namespace Sabado
         }
         public IntDelegate OnTimeChanged;
         private int time;
+
+        private void Awake()
+        {
+            if (Instance == null)
+                Instance = this;
+            else
+                Destroy(this);
+        }
 
         /// <summary>
         /// Inicializa variables

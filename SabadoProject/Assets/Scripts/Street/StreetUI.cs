@@ -37,7 +37,6 @@ namespace Sabado
 
         private void TimeChanged(int newTime)
         {
-            Debug.Log("hola");
             int hours = newTime / 60;
             int minutes = newTime % 60;
 

@@ -21,7 +21,7 @@ namespace Sabado
         /// </summary>
         private void Start()
         {
-            titleText.text = GameManager.instance.GameName;
+            titleText.text = GameManager.Instance.GameName;
         }
 
         /// <summary>

@@ -1,13 +1,13 @@
 ﻿using UnityEngine;
 
-namespace Sabado
+namespace RaulSerranoDev
 {
     /// <summary>
-    /// Singleton persistente entre escenas
+    /// Ejemplo de Singleton Persistente entre escenas
     /// </summary>
-    public class GameManager : MonoBehaviour
+    public class PersistentSingletonExample : MonoBehaviour
     {
-        public static GameManager Instance { get; private set; }
+        public static PersistentSingletonExample Instance { get; private set; }
 
         private void Awake()
         {
@@ -19,12 +19,5 @@ namespace Sabado
             else
                 Destroy(this);
         }
-
-
-        /// <summary>
-        /// Nombre del juego
-        /// </summary>
-        public string GameName;
-
     }
 }

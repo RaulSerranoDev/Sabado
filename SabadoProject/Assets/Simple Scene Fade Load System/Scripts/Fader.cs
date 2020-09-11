@@ -3,52 +3,47 @@ using System.Collections;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
+/// <summary>
+/// Componente encargado de realizar el Fade entre escenas
+/// </summary>
 public class Fader : MonoBehaviour
 {
-    [HideInInspector]
-    public bool start = false;
-    [HideInInspector]
-    public float fadeDamp = 0.0f;
-    [HideInInspector]
-    public string fadeScene;
-    [HideInInspector]
-    public float alpha = 0.0f;
-    [HideInInspector]
-    public Color fadeColor;
-    [HideInInspector]
-    public bool isFadeIn = false;
-    CanvasGroup myCanvas;
-    Image bg;
-    float lastTime = 0;
-    bool startedLoading = false;
-    //Set callback
-    void OnEnable()
-    {
-        SceneManager.sceneLoaded += OnLevelFinishedLoading;
-    }
-    //Remove callback
-    void OnDisable()
-    {
-        SceneManager.sceneLoaded -= OnLevelFinishedLoading;
-    }
+    private string _sceneName;          // Nombre de la escena a la que se transiciona
+    private float _fadeTime = 0.0f;     // Duración en segundos del Fade
+    private Color _fadeColor;           // Color con el que se desvanece
 
-    public void InitiateFader()
-    {
+    CanvasGroup myCanvas;               // Referencia al canvas
 
+    private bool fadeIn = false;        // Booleana que indica si se está realizando actualmente el fade in
+
+    /// <summary>
+    /// Inica el fade, inicializando variables y detectando posibles errores
+    /// </summary>
+    /// <param name="sceneName">Nombre de la escena a la que se transiciona</param>
+    /// <param name="fadeTime">Duración en segundos del Fade</param>
+    /// <param name="fadeColor">Color con el que se desvanece</param>
+    public void Init(string sceneName, float fadeTime, Color fadeColor)
+    {
+        _sceneName = sceneName;
+        _fadeTime = fadeTime;
+        _fadeColor = fadeColor;
+
+        //El objeto no se destruye entre escenas
         DontDestroyOnLoad(gameObject);
 
-        //Getting the visual elements
+        //Se obtienen las referencias
         if (transform.GetComponent<CanvasGroup>())
             myCanvas = transform.GetComponent<CanvasGroup>();
 
+        Image image = null;
         if (transform.GetComponentInChildren<Image>())
+            image = transform.GetComponent<Image>();
+
+        //Comprobación de errores y empieza la corrutina
+        if (myCanvas && image)
         {
-            bg = transform.GetComponent<Image>();
-            bg.color = fadeColor;
-        }
-        //Checking and starting the coroutine
-        if (myCanvas && bg)
-        {
+            //Establece el color inicial
+            image.color = _fadeColor;
             myCanvas.alpha = 0.0f;
             StartCoroutine(FadeIt());
         }
@@ -56,49 +51,53 @@ public class Fader : MonoBehaviour
             Debug.LogWarning("Something is missing please reimport the package.");
     }
 
-    IEnumerator FadeIt()
+    /// <summary>
+    /// Corrutina encargada de realizar el Fade
+    /// </summary>
+    /// <returns></returns>
+    private IEnumerator FadeIt()
     {
+        bool fadeEnd = false;           // Booleana que indica si se ha acabado de realizar todo el Fade
+        bool startedLoading = false;    // Booleana que indica si se ha empezado a cargar la escena
+        float alpha = 0.0f;             // Alpha actual del color del Fade
 
-        while (!start)
+        //Bucle de Fade
+        while (!fadeEnd)
         {
-            //waiting to start
-            yield return null;
-        }
-        lastTime = Time.time;
-        float coDelta = lastTime;
-        bool hasFadedIn = false;
-
-        while (!hasFadedIn)
-        {
-            coDelta = Time.time - lastTime;
-            if (!isFadeIn)
+            //Fade in
+            if (!fadeIn)
             {
-                //Fade in
-                alpha = newAlpha(coDelta, 1, alpha);
+                //Cálculo del nuevo alpha
+                alpha = newAlpha(1, alpha);
+
+                //Fade in completo
                 if (alpha == 1 && !startedLoading)
                 {
                     startedLoading = true;
-                    SceneManager.LoadScene(fadeScene);
+                    SceneManager.LoadScene(_sceneName);
                 }
-
             }
+
+            //Fade out
             else
             {
-                //Fade out
-                alpha = newAlpha(coDelta, 0, alpha);
+                //Cálculo del nuevo alpha
+                alpha = newAlpha(0, alpha);
+
+                //Fade out completo
                 if (alpha == 0)
-                {
-                    hasFadedIn = true;
-                }
-
-
+                    fadeEnd = true;
             }
-            lastTime = Time.time;
+
+            //Aplica el alpha correspondiente
             myCanvas.alpha = alpha;
+
             yield return null;
         }
 
-        Initiate.DoneFading();
+        //Fade acabado, se destruye el objeto
+
+        SceneTransition.DoneFading();
 
         Debug.Log("Your scene has been loaded , and fading in has just ended");
 
@@ -107,20 +106,24 @@ public class Fader : MonoBehaviour
         yield return null;
     }
 
-
-    float newAlpha(float delta, int to, float currAlpha)
+    /// <summary>
+    /// Calcula el nuevo valor de alpha
+    /// </summary>
+    /// <param name="to">Hacia que alpha transiciona</param>
+    /// <param name="currAlpha">alpha actual</param>
+    /// <returns></returns>
+    private float newAlpha(int to, float currAlpha)
     {
-
         switch (to)
         {
             case 0:
-                currAlpha -= fadeDamp * delta;
+                currAlpha -= _fadeTime * Time.deltaTime;
                 if (currAlpha <= 0)
                     currAlpha = 0;
 
                 break;
             case 1:
-                currAlpha += fadeDamp * delta;
+                currAlpha += _fadeTime * Time.deltaTime;
                 if (currAlpha >= 1)
                     currAlpha = 1;
 
@@ -130,10 +133,30 @@ public class Fader : MonoBehaviour
         return currAlpha;
     }
 
-    void OnLevelFinishedLoading(Scene scene, LoadSceneMode mode)
+    /// <summary>
+    /// Suscripción a evento de escena cargada para empezar a realizar el fade in
+    /// </summary>
+    private void OnEnable()
     {
-        StartCoroutine(FadeIt());
-        //We can now fade in
-        isFadeIn = true;
+        SceneManager.sceneLoaded += OnLevelFinishedLoading;
+    }
+
+    /// <summary>
+    /// Desuscripción a evento de escena cargada antes de que el objeto se destruya
+    /// </summary>   
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnLevelFinishedLoading;
+    }
+
+    /// <summary>
+    /// Es llamado cuando la escena ha cargado.
+    /// Hace que empiece el fade in
+    /// </summary>
+    /// <param name="scene"></param>
+    /// <param name="mode"></param>
+    private void OnLevelFinishedLoading(Scene scene, LoadSceneMode mode)
+    {
+        fadeIn = true;
     }
 }

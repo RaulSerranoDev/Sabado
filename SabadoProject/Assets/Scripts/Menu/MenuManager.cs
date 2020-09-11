@@ -28,7 +28,7 @@ namespace Sabado
         /// </summary>
         public void StartGame()
         {
-            Initiate.Fade("Street", fadeColor, fadeTime);
+            SceneTransition.Fade("Street", fadeTime, fadeColor);
         }
     }
 }

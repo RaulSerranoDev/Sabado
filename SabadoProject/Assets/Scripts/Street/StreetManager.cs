@@ -52,7 +52,7 @@ namespace Sabado
         /// </summary>
         public void CoupleArrived()
         {
-            Initiate.Fade("Room", fadeColor, fadeTime);
+            SceneTransition.Fade("Room", fadeTime, fadeColor);
         }
 
         /// <summary>
